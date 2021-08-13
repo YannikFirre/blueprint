@@ -16,6 +16,7 @@ class Model
     private $relationships = [];
     private $pivotTables = [];
     private $indexes = [];
+    private $traits = [];
 
     /**
      * @param $name
@@ -73,6 +74,11 @@ class Model
     public function relationships(): array
     {
         return $this->relationships;
+    }
+
+    public function traits(): array
+    {
+        return $this->traits;
     }
 
     public function primaryKey()
@@ -151,6 +157,11 @@ class Model
         }
 
         $this->relationships[$type][] = $reference;
+    }
+
+    public function addTrait(string $name, $class)
+    {
+        $this->traits[$name] = ltrim($class, '\\');
     }
 
     public function addPivotTable(string $reference)
