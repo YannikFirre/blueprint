@@ -45,17 +45,17 @@ class ResourceGenerator implements Generator
         foreach ($tree->controllers() as $controller) {
             foreach ($controller->methods() as $method => $statements) {
                 foreach ($statements as $statement) {
-                    if (!$statement instanceof ResourceStatement) {
+                    if (! $statement instanceof ResourceStatement) {
                         continue;
                     }
 
-                    $path = $this->getPath(($controller->namespace() ? $controller->namespace() . '/' : '') . $statement->name());
+                    $path = $this->getPath(($controller->namespace() ? $controller->namespace().'/' : '').$statement->name());
 
                     if ($this->filesystem->exists($path)) {
                         continue;
                     }
 
-                    if (!$this->filesystem->exists(dirname($path))) {
+                    if (! $this->filesystem->exists(dirname($path))) {
                         $this->filesystem->makeDirectory(dirname($path), 0755, true);
                     }
 
@@ -76,14 +76,14 @@ class ResourceGenerator implements Generator
 
     protected function getPath(string $name)
     {
-        return Blueprint::appPath() . '/Http/Resources/' . $name . '.php';
+        return Blueprint::appPath().'/Http/Resources/'.$name.'.php';
     }
 
     protected function populateStub(string $stub, Controller $controller, ResourceStatement $resource)
     {
         $namespace = config('blueprint.namespace')
-            . '\\Http\\Resources'
-            . ($controller->namespace() ? '\\' . $controller->namespace() : '');
+            .'\\Http\\Resources'
+            .($controller->namespace() ? '\\'.$controller->namespace() : '');
 
         $stub = str_replace('{{ namespace }}', $namespace, $stub);
         $stub = str_replace('{{ import }}', $resource->collection() ? 'Illuminate\\Http\\Resources\\Json\\ResourceCollection' : 'Illuminate\\Http\\Resources\\Json\\JsonResource', $stub);
@@ -96,6 +96,7 @@ class ResourceGenerator implements Generator
         if (Blueprint::supportsReturnTypeHits()) {
             $stub = str_replace('toArray($request)', 'toArray($request): array', $stub);
         }
+
         return $stub;
     }
 
@@ -111,7 +112,7 @@ class ResourceGenerator implements Generator
         $data = [];
         if ($resource->collection()) {
             $data[] = 'return [';
-            $data[] = self::INDENT . '\'data\' => $this->collection,';
+            $data[] = self::INDENT.'\'data\' => $this->collection,';
             $data[] = '        ];';
 
             return implode(PHP_EOL, $data);
@@ -119,7 +120,13 @@ class ResourceGenerator implements Generator
 
         $data[] = 'return [';
         foreach ($this->visibleColumns($model) as $column) {
-            $data[] = self::INDENT . '\'' . $column . '\' => $this->' . $column . ',';
+            $data[] = self::INDENT.'\''.$column.'\' => $this->'.$column.',';
+        }
+
+        if($model->usesTimestamps()) {
+            foreach (['created_at', 'updated_at'] as $column) {
+                $data[] = self::INDENT.'\''.$column.'\' => $this->'.$column.',';
+            }
         }
 
         foreach ($model->relationships() as $type => $relationship) {
@@ -132,13 +139,13 @@ class ResourceGenerator implements Generator
             }
 
             if (in_array($type, ['hasMany', 'belongsToMany', 'morphMany'])) {
-                $relation_resource_name = $relation_model->name() . 'Collection';
+                $relation_resource_name = $relation_model->name().'Collection';
                 $method_name = Str::plural($method_name);
             } else {
-                $relation_resource_name = $relation_model->name() . 'Resource';
+                $relation_resource_name = $relation_model->name().'Resource';
             }
 
-            $data[] = self::INDENT . '\'' . $method_name . '\' => ' . $relation_resource_name . '::make($this->whenLoaded(\'' . $method_name . '\')),';
+            $data[] = self::INDENT.'\''.$method_name.'\' => '.$relation_resource_name.'::make($this->whenLoaded(\''.$method_name.'\')),';
         }
 
         $data[] = '        ];';
